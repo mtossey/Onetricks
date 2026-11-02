@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__CHAMPION__ mains · __SITE_NAME__</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../index.html">← All champions</a>
+  <div class="champ-head">
+    <img id="champ-icon" alt="">
+    <div>
+      <h1 id="champ-name"></h1>
+      <p id="champ-summary"></p>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="roles" id="roles" role="group" aria-label="Role"></div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" data-tab="build">Build</button>
+    <button type="button" role="tab" data-tab="ranking">Ranking</button>
+    <button type="button" role="tab" data-tab="counters">Counters</button>
+  </div>
+
+  <div id="filter-note"></div>
+  <div id="panel"></div>
+
+  <footer>
+    <p id="built"></p>
+    <p>__SITE_NAME__ isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</p>
+  </footer>
+</div>
+
+<script>
+const DATA = __DATA__;
+const L = DATA.lookup;
+
+// GAME FIELDS: each game in DATA.games is a list, in this order (see
+// page_payload in src/champion_pages.py). Turned into objects for readability.
+const GAMES = DATA.games.map(g => ({
+  player: g[0], role: g[1], win: g[2], kills: g[3], deaths: g[4], assists: g[5],
+  items: g[6], spells: g[7], runes: g[8], shards: g[9], opponent: g[10],
+}));
+
+const ROLES = [["ALL", "All roles"], ["TOP", "Top"], ["JUNGLE", "Jungle"],
+               ["MIDDLE", "Mid"], ["BOTTOM", "Bot"], ["UTILITY", "Support"]];
+
+const pct = (v, digits = 1) => (v * 100).toFixed(digits) + "%";
+// Riot IDs are chosen by players, so escape them before putting them in HTML
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const icon = (entry, cls = "") => entry
+  ? `<img class="${cls}" src="${entry[1]}" alt="${esc(entry[0])}" title="${esc(entry[0])}" loading="lazy">` : "";
+
+// State: chosen role, chosen player (index into DATA.players, or null) and tab
+const roleCounts = Object.fromEntries(ROLES.map(([key]) =>
+  [key, key === "ALL" ? GAMES.length : GAMES.filter(g => g.role === key).length]));
+const mainRole = ROLES.slice(1).reduce((best, [key]) => roleCounts[key] > roleCounts[best] ? key : best, "TOP");
+// A link like Talon.html#jungle opens on that role; otherwise the champion's most-played role
+const roleSlug = label => label.toLowerCase().replace(" ", "-");
+const fromHash = ROLES.find(([, label]) => "#" + roleSlug(label) === location.hash.toLowerCase());
+let role = fromHash && roleCounts[fromHash[0]] ? fromHash[0] : mainRole;
+let player = null;
+// A link like Talon.html?tab=counters opens on that tab
+const TABS = ["build", "ranking", "counters"];
+let tab = TABS.includes(new URLSearchParams(location.search).get("tab")) ? new URLSearchParams(location.search).get("tab") : "build";
+
+function inView(g) {
+  return (role === "ALL" || g.role === role) && (player === null || g.player === player);
+}
+
+// Count games and wins for each option. keysOf(game) returns the game's
+// options as a list (several items per game, one rune page per game).
+function tally(games, keysOf) {
+  const counts = new Map();
+  for (const g of games) {
+    for (const key of keysOf(g)) {
+      const c = counts.get(key) || { key, games: 0, wins: 0 };
+      c.games += 1;
+      c.wins += g.win;
+      counts.set(key, c);
+    }
+  }
+  return [...counts.values()].sort((a, b) => b.games - a.games || b.wins - a.wins);
+}
+
+function stats(c, total) {
+  return `<div class="stats"><b>${pct(c.games / total)}</b><small>${pct(c.wins / c.games)} WR · ${c.games} g</small></div>`;
+}
+
+// wide cards span two grid columns and list their options in two columns
+function card(title, subtitle, options, total, render, limit, wide = false) {
+  const rows = options.slice(0, limit).map(c => `<div class="opt">${render(c)}${stats(c, total)}</div>`).join("");
+  const body = rows ? (wide ? `<div class="opt-columns">${rows}</div>` : rows) : `<div class="empty">No games</div>`;
+  return `<section class="card${wide ? " wide" : ""}"><h2>${title}<small>${subtitle}</small></h2>${body}</section>`;
+}
+
+// ---------- Build tab ----------
+function renderBuild(games) {
+  const n = games.length;
+  const runePages = tally(games, g => [g.runes.join(",")]);
+  const shards = tally(games, g => [g.shards.join(",")]);
+  const spells = tally(games, g => [g.spells.join(",")]);
+  const boots = tally(games, g => g.items.filter(i => L.items[i] && L.items[i][2] === "boots"));
+  const items = tally(games, g => g.items.filter(i => L.items[i] && L.items[i][2] === "completed"));
+
+  const runeIcons = key => {
+    // [primary tree, keystone, rune, rune, rune, secondary tree, rune, rune]
+    const r = key.split(",").map(Number);
+    const keystone = L.runes[r[1]], secondary = L.runes[r[5]];
+    return `<div class="stack"><div class="icons">${icon(keystone, "big round")}${icon(L.runes[r[2]], "round")}${icon(L.runes[r[3]], "round")}` +
+           `${icon(L.runes[r[4]], "round")}<span class="sep"></span>${icon(L.runes[r[6]], "round")}${icon(L.runes[r[7]], "round")}</div>` +
+           `<div class="label shards">${keystone ? esc(keystone[0]) : ""}${secondary ? ` + ${esc(secondary[0])}` : ""}</div></div>`;
+  };
+  const named = (entry) => `<div class="icons">${icon(entry)}</div><div class="label">${entry ? esc(entry[0]) : "Unknown"}</div>`;
+  const spellPair = key => {
+    const pair = key.split(",").map(s => L.spells[s]);
+    return `<div class="icons">${pair.map(s => icon(s)).join("")}</div><div class="label">${pair.map(s => s ? esc(s[0]) : "?").join(" + ")}</div>`;
+  };
+
+  return `<div class="cards">
+    ${card("Rune pages", "keystone, primary and secondary runes", runePages, n, c => runeIcons(c.key), 4)}
+    ${card("Summoner spells", "", spells, n, c => spellPair(c.key), 4)}
+    ${card("Stat shards", "offense, flex, defense", shards, n, c => `<div class="label shards">${c.key.split(",").map(s => L.shards[s] || s).join(" / ")}</div>`, 4)}
+    ${card("Boots", "share of games ending with them", boots, n, c => named(L.items[c.key]), 6)}
+    ${card("Completed items", "share of games ending with each item", items, n, c => named(L.items[c.key]), 12, true)}
+  </div>
+  <p class="note">Pick rate is the share of these games that used the option; WR is the win rate in those games. Items are the final inventory at the end of each game. Starting items, build order and skill order need match timelines, which are not collected yet.</p>`;
+}
+
+// ---------- Ranking tab ----------
+function renderRanking() {
+  // Uses the role filter but not the player filter, so every main stays listed
+  const games = GAMES.filter(g => role === "ALL" || g.role === role);
+  const rows = DATA.players.map((p, i) => {
+    const mine = games.filter(g => g.player === i);
+    const sum = f => mine.reduce((s, g) => s + g[f], 0);
+    return { ...p, index: i, games: mine.length, wins: sum("win"),
+             kda: (sum("kills") + sum("assists")) / Math.max(sum("deaths"), 1) };
+  }).filter(r => r.games > 0)
+    .sort((a, b) => b.games - a.games || b.wins / b.games - a.wins / a.games);
+
+  if (!rows.length) return `<div class="empty">No mains in this role.</div>`;
+  return `<div class="table-box" style="border-top:1px solid var(--line);border-radius:10px"><table>
+    <thead><tr><th>#</th><th class="left">Player</th><th class="left">Rank</th><th>Games</th>
+      <th>Play rate<span class="sub">share of their games</span></th><th>Win rate</th><th>KDA</th></tr></thead>
+    <tbody>${rows.map((r, i) => `
+      <tr class="linked" data-player="${r.index}" title="Show this player's build">
+        <td class="rank">${i + 1}</td>
+        <td class="left"><span class="player">${esc(r.riot_id)}</span> ${r.otp ? `<span class="tag otp">OTP</span>` : ""}</td>
+        <td class="left">${esc(r.tier)} <small class="dash">${r.lp} LP</small></td>
+        <td class="num">${r.games}</td>
+        <td class="num">${pct(r.share, 0)}</td>
+        <td class="wr">${pct(r.wins / r.games)}</td>
+        <td class="num">${r.kda.toFixed(2)}</td>
+      </tr>`).join("")}</tbody></table></div>
+    <p class="note">Players are sorted by games on this champion in their newest ${DATA.window_size} ranked games. Click a player to see their build.</p>`;
+}
+
+// ---------- Counters tab ----------
+function renderCounters(games) {
+  const rows = tally(games.filter(g => g.opponent !== null), g => [g.opponent]);
+  if (!rows.length) return `<div class="empty">No lane opponents recorded.</div>`;
+  return `<div class="table-box" style="border-top:1px solid var(--line);border-radius:10px"><table>
+    <thead><tr><th>#</th><th class="left">Lane opponent</th><th>Games</th><th>Win rate<span class="sub">of ${esc(DATA.champion.name)} mains</span></th></tr></thead>
+    <tbody>${rows.map((c, i) => {
+      const champ = L.champions[c.key];
+      return `<tr><td class="rank">${i + 1}</td>
+        <td class="left"><div class="champ">${icon(champ)}${champ ? esc(champ[0]) : c.key}</div></td>
+        <td class="num">${c.games}</td><td class="wr">${pct(c.wins / c.games)}</td></tr>`;
+    }).join("")}</tbody></table></div>
+    <p class="note">Each row is ${esc(DATA.champion.name)} mains' record against that champion in the same role. Most rows have only a few games, so treat them as rough.</p>`;
+}
+
+// ---------- Page ----------
+document.getElementById("champ-icon").src = DATA.champion.icon;
+document.getElementById("champ-name").textContent = DATA.champion.name;
+const totalWins = GAMES.reduce((s, g) => s + g.win, 0);
+const otps = DATA.players.filter(p => p.otp).length;
+document.getElementById("champ-summary").textContent =
+  `${DATA.players.length} ${DATA.players.length === 1 ? "main" : "mains"} (${otps} ${otps === 1 ? "OTP" : "OTPs"}) ·${GAMES.length} games · ${pct(totalWins / GAMES.length)} win rate on ${DATA.champion.name}`;
+document.getElementById("built").textContent = `Built ${DATA.built} from NA Master+ games collected through the Riot Games API. Builds come from mains' and OTPs' games only.`;
+
+const roleBox = document.getElementById("roles");
+roleBox.addEventListener("click", e => {
+  const button = e.target.closest("button");
+  if (!button || button.disabled) return;
+  role = button.dataset.role;
+  history.replaceState(null, "", "#" + roleSlug(ROLES.find(([key]) => key === role)[1]));
+  render();
+});
+
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => { tab = b.dataset.tab; render(); }));
+
+document.getElementById("panel").addEventListener("click", e => {
+  const row = e.target.closest("tr[data-player]");
+  if (!row) return;
+  player = Number(row.dataset.player);
+  tab = "build";
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+document.getElementById("filter-note").addEventListener("click", e => {
+  if (e.target.closest("button")) { player = null; render(); }
+});
+
+function render() {
+  roleBox.innerHTML = ROLES.map(([key, label]) => {
+    const share = roleCounts[key] / GAMES.length;
+    return `<button type="button" data-role="${key}" aria-pressed="${key === role}" ${roleCounts[key] ? "" : "disabled"}>` +
+           `${label}${key === "ALL" ? "" : `<small>${pct(share, 0)}</small>`}</button>`;
+  }).join("");
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+
+  const games = GAMES.filter(inView);
+  const note = document.getElementById("filter-note");
+  note.innerHTML = player === null ? "" :
+    `<div class="filter-note">Showing <b>${esc(DATA.players[player].riot_id)}</b> only (${games.length} games)<button type="button">Show all mains</button></div>`;
+
+  const panel = document.getElementById("panel");
+  if (tab === "ranking") panel.innerHTML = renderRanking();
+  else if (!games.length) panel.innerHTML = `<div class="empty">No games for this selection.</div>`;
+  else panel.innerHTML = tab === "build" ? renderBuild(games) : renderCounters(games);
+}
+render();
+</script>
+</body>
+</html>
