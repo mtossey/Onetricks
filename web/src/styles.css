@@ -268,3 +268,10 @@ td.left, th.left { text-align: left; }
 .pill.all-pill { padding: 4px 14px; min-height: 38px; font-weight: 600; }
 .pair .pill.all-pill { min-height: 36px; }
 .tree-note { margin: -4px 0 10px; color: var(--faint); font-size: 12px; }
+
+/* Role icons are gold (Riot's position icons, plus our All icon in the same gold).
+   Grey and dim unless the role is selected, brighter on hover. */
+svg.role-icon { color: #c8aa6e; }
+.roles .role-icon { filter: grayscale(1); opacity: 0.55; transition: opacity 0.1s; }
+.roles button:hover:not([disabled]) .role-icon { opacity: 0.85; }
+.roles button[aria-pressed=true] .role-icon { filter: none; opacity: 1; }
