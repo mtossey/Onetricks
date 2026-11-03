@@ -30,7 +30,7 @@ def main():
         todo = [row[0] for row in conn.execute(
             "SELECT puuid FROM players WHERE match_ids_fetched_at IS NULL ORDER BY rowid"
         )]
-    if args.limit:
+    if args.limit is not None:  # "is not None", so --limit 0 means zero, not "no limit"
         todo = todo[:args.limit]
     print(f"{len(todo)} players to process")
 

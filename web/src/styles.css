@@ -1,4 +1,4 @@
-/* Shared styles for site/index.html and the champion pages. */
+/* Styles for the React site. */
 :root {
   color-scheme: dark;
   --bg: #111216;
@@ -149,3 +149,122 @@ td.left, th.left { text-align: left; }
 .opt .stack .icons { flex-wrap: nowrap; }
 .opt .stack .icons img { width: 24px; height: 24px; }
 .opt .stack .icons img.big { width: 30px; height: 30px; }
+
+/* Rune section of the champion Build tab */
+:root { --good: #3fbf7f; --bad: #e66767; }
+.card.full { grid-column: 1 / -1; }
+.card.full .opt-columns { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.card.full .opt-columns .opt:nth-child(-n+3) { border-top: 0; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.pill {
+  display: flex; align-items: center; gap: 8px; background: none; color: var(--muted);
+  border: 1px solid transparent; border-radius: 8px; padding: 4px 10px 4px 4px; font: inherit; cursor: pointer;
+}
+.pill img { width: 26px; height: 26px; }
+.pill.big img { width: 34px; height: 34px; }
+.pill:hover { color: var(--text); }
+.pill.on { border-color: var(--line); background: var(--panel-2); color: var(--text); font-weight: 600; }
+.rune-layout { display: grid; gap: 24px 40px; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.rune-tree { min-width: 0; }
+.rune-row { display: flex; justify-content: space-around; gap: 6px; margin-bottom: 14px; }
+.rune { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 52px; }
+.rune img { width: 38px; height: 38px; border-radius: 50%; filter: grayscale(1); opacity: 0.35; }
+.keystone-row .rune img { width: 52px; height: 52px; }
+.rune.small img { width: 34px; height: 34px; }
+.rune.tiny img { width: 22px; height: 22px; }
+.rune.on img { filter: none; opacity: 1; box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--main); }
+.keystone-row .rune.on img { box-shadow: none; }
+.shard-grid { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 4px; }
+.shard-grid .rune-row { margin-bottom: 8px; }
+.rs { display: flex; flex-direction: column; align-items: center; font-size: 11px; line-height: 1.25; font-variant-numeric: tabular-nums; color: var(--faint); }
+.rs .rwr { color: var(--text); font-weight: 600; }
+.rs .rwr.good { color: var(--good); }
+.rs .rwr.bad { color: var(--bad); }
+.rs .rpick { color: #8db8f0; font-weight: 600; }
+.rune-tree { max-width: 460px; width: 100%; justify-self: center; }
+.rune-tree > .rune-row { margin-bottom: 20px; }
+.rune-tree > .keystone-row { margin-bottom: 26px; }
+
+/* A table that sits on its own, not under a controls bar */
+.table-box.boxed { border-top: 1px solid var(--line); border-radius: 10px; }
+
+/* Role icon buttons: a tile with the icon, a short label and (on champion pages) the share */
+.roles button {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  min-width: 46px; padding: 6px 6px 4px; border: 1px solid transparent;
+}
+.roles button[aria-pressed=true] { border-color: var(--line); }
+.role-icon { display: block; }
+.role-short { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; line-height: 1; }
+.roles button small { margin-left: 0; line-height: 1; }
+
+/* Build path */
+.path-label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+.path-first { margin-bottom: 10px; }
+.item-pill { padding: 4px 10px 4px 4px; }
+.item-pill img { width: 34px; height: 34px; border-radius: 6px; }
+.pill-stats { display: flex; flex-direction: column; line-height: 1.2; text-align: left; font-variant-numeric: tabular-nums; }
+.pill-stats small { color: var(--faint); font-size: 11px; font-weight: 400; }
+.path-slots { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); border-top: 1px solid var(--line); padding-top: 12px; }
+.path-slot .opt { padding: 5px 0; }
+.path-slot .opt:first-of-type { border-top: 0; }
+
+/* Skill order */
+.skill-layout { display: grid; gap: 8px 32px; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.skill-chain { gap: 6px; }
+.chain-step { display: inline-flex; align-items: center; gap: 6px; }
+.chain-arrow { color: var(--faint); font-size: 18px; }
+.ability { position: relative; display: inline-block; width: 30px; height: 30px; }
+.ability img { width: 30px; height: 30px; border-radius: 6px; display: block; }
+.ability b {
+  position: absolute; right: -3px; bottom: -3px; background: var(--bg); color: var(--text);
+  font-size: 10px; line-height: 1; padding: 2px 3px; border-radius: 4px;
+}
+.skill-grid-box { overflow-x: auto; }
+.skill-grid { border-collapse: separate; border-spacing: 3px; min-width: 0; width: auto; }
+.skill-grid th { padding: 0 6px 0 0; }
+.skill-grid td {
+  width: 26px; height: 26px; padding: 0; text-align: center; font-size: 11px; font-weight: 700;
+  background: var(--panel-2); border-radius: 4px; color: var(--text);
+}
+.skill-grid td.on.skill-Q { background: #2f6fbf; }
+.skill-grid td.on.skill-W { background: #2f9a6a; }
+.skill-grid td.on.skill-E { background: #b9822f; }
+.skill-grid td.on.skill-R { background: #b5485a; }
+
+/* Option rows keep their icons on one line; the label is what gets cut short */
+.opt .icons { flex-wrap: nowrap; flex-shrink: 0; }
+
+/* Runes and build path side by side, each about half the width */
+.pair { grid-column: 1 / -1; display: grid; gap: 14px; align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); }
+.pair .rune-layout { gap: 16px 20px; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); }
+.pair .rune { min-width: 40px; gap: 3px; }
+.pair .rune img { width: 28px; height: 28px; }
+.pair .keystone-row .rune img { width: 38px; height: 38px; }
+.pair .rune.small img { width: 26px; height: 26px; }
+.pair .rune.tiny img { width: 18px; height: 18px; }
+.pair .rs { font-size: 10px; }
+.pair .rune-tree > .rune-row { margin-bottom: 12px; }
+.pair .rune-tree > .keystone-row { margin-bottom: 16px; }
+.pair .pill.big img { width: 28px; height: 28px; }
+.pair .pills { gap: 4px; margin-bottom: 10px; }
+.pair .item-pill img { width: 28px; height: 28px; }
+.pair .path-slots { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.pair .path-slot .opt { gap: 6px; }
+.pair .path-slot .opt .icons img { width: 26px; height: 26px; }
+.cross-filter {
+  display: flex; align-items: center; gap: 8px; margin: -2px 0 10px; padding: 6px 8px;
+  background: var(--panel-2); border-radius: 8px; font-size: 12px; color: var(--muted);
+}
+.cross-filter img { width: 20px; height: 20px; border-radius: 4px; }
+.cross-filter img.round { border-radius: 50%; }
+.cross-filter button { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--text); border-radius: 6px; padding: 2px 8px; font: inherit; cursor: pointer; }
+
+/* Ranked tier emblem with LP in the Ranking tab */
+.tier { display: inline-flex; align-items: center; gap: 8px; }
+.tier img { width: 34px; height: auto; display: block; }
+
+/* "All" pill at the front of the keystone and 1st item rows: no filter */
+.pill.all-pill { padding: 4px 14px; min-height: 38px; font-weight: 600; }
+.pair .pill.all-pill { min-height: 36px; }
+.tree-note { margin: -4px 0 10px; color: var(--faint); font-size: 12px; }

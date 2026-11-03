@@ -187,4 +187,8 @@ data/
 .venv/
 
 CLAUDE.md
-site/
+
+# React site (web/): dependencies, build output, and data files with Riot IDs
+web/node_modules/
+web/dist/
+web/public/data/

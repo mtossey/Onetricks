@@ -117,7 +117,7 @@ def main():
 
     init_db()  # adds any new tables from schema.sql, keeps existing data
     todo = matches_to_download(args.max_rank, args.players)
-    if args.limit:
+    if args.limit is not None:  # "is not None", so --limit 0 means zero, not "no limit"
         todo = todo[:args.limit]
     print(f"{len(todo)} matches to download")
 

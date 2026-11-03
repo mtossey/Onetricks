@@ -137,7 +137,9 @@ Games from the same player are not independent. A player who wins a lot will win
 | 7 | `notebooks/analysis.ipynb` | Charts, player bootstrap, same-champion difference |
 | 8 | `src/extract_details.py` | Extracts full rune pages and Riot IDs from the stored match JSON (no API calls) |
 | 9 | `sql/main_games.sql`, `src/champion_pages.py` | One row per main's game on their champion, with items, spells, runes and the lane opponent (a self-join) |
-| 10 | `src/build_site.py` | Builds the static site: a sortable champion table with a role filter, and a page per champion with Build, Ranking and Counters tabs |
+| 9b | `src/collect_timelines.py`, `sql/main_purchases.sql`, `sql/skill_order.sql` | Downloads match timelines for mains' games (5,701 matches), keeps only item and skill events, and derives starting items, build order (undone purchases removed) and skill order with window functions |
+| 10 | `src/build_site.py` | Writes the site's data as JSON (`web/public/data/`): the champion table and one file per champion |
+| 11 | `web/` | The website, in React + TypeScript (Vite): a sortable champion table with a role filter, and a page per champion with Build, Players and Counters tabs |
 
 ## Limitations
 
@@ -172,8 +174,19 @@ python src/collect_match_ids.py   # match ID lists, about 45 minutes
 python src/collect_matches.py     # match details for the sample, about 4 hours
 python src/champion_table.py      # print the pooled summary and table
 python src/extract_details.py     # runes and Riot IDs from the stored JSON
-python src/build_site.py          # write site/index.html and site/champions/
+python src/collect_timelines.py    # item and skill timelines for mains' games, about 2 hours
+python src/build_site.py          # write the site's JSON data to web/public/data/
 ```
+
+To view the website (needs [Node.js](https://nodejs.org) 20 or newer):
+
+```bash
+cd web
+npm install                       # once
+npm run dev                       # then open the address it prints
+```
+
+`npm run build` writes a static copy to `web/dist/`.
 
 Open `notebooks/analysis.ipynb` for the charts. The sample size and window are set in `src/settings.py` and in the `settings` CTE at the top of each file in `sql/`.
 

@@ -112,3 +112,35 @@ CREATE TABLE IF NOT EXISTS participant_details (
     PRIMARY KEY (match_id, puuid),
     FOREIGN KEY (match_id, puuid) REFERENCES participants(match_id, puuid)
 );
+
+-- Match timelines (match-v5 timeline endpoint), downloaded by
+-- src/collect_timelines.py for matches where a main or OTP played their
+-- champion. One row per match, so the download can stop and resume.
+--   available = 0 when the API had no timeline (404).
+CREATE TABLE IF NOT EXISTS timelines (
+    match_id   TEXT PRIMARY KEY REFERENCES matches(match_id),
+    available  INTEGER NOT NULL,
+    fetched_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- The item and skill events from those timelines, for all 10 players.
+-- Everything else in a timeline (about 400 KB per match) is thrown away.
+--   event_type: ITEM_PURCHASED, ITEM_SOLD, ITEM_UNDO or SKILL_LEVEL_UP
+--   item_id:    the item bought or sold. For ITEM_UNDO, the item the undo
+--               removed (Riot's beforeId); after_id is what it restored.
+--   skill_slot: 1 = Q, 2 = W, 3 = E, 4 = R
+--   seq:        the event's position in the timeline, to keep the order of
+--               events that share a timestamp
+CREATE TABLE IF NOT EXISTS timeline_events (
+    match_id      TEXT NOT NULL REFERENCES timelines(match_id),
+    puuid         TEXT NOT NULL,
+    seq           INTEGER NOT NULL,
+    timestamp_ms  INTEGER NOT NULL,
+    event_type    TEXT NOT NULL,
+    item_id       INTEGER,
+    after_id      INTEGER,
+    skill_slot    INTEGER,
+    level_up_type TEXT,
+    PRIMARY KEY (match_id, seq)
+);
+CREATE INDEX IF NOT EXISTS idx_timeline_events_player ON timeline_events(match_id, puuid);
