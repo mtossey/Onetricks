@@ -192,3 +192,7 @@ CLAUDE.md
 web/node_modules/
 web/dist/
 web/public/data/
+
+# Cloudflare wrangler: local state and local secrets
+web/.wrangler/
+web/.dev.vars
