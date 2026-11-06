@@ -11,6 +11,10 @@
 
 const REALM = "mainstats prototype";
 
+// Riot checks that we own the site by reading this one file, so it is the only
+// path served without a login. It holds just Riot's verification code.
+const PUBLIC_PATHS = new Set(["/riot.txt"]);
+
 async function sha256(text) {
   return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
 }
@@ -23,6 +27,8 @@ function askForLogin() {
 }
 
 export async function onRequest({ request, env, next }) {
+  if (PUBLIC_PATHS.has(new URL(request.url).pathname)) return next();
+
   const user = env.BASIC_AUTH_USER;
   const password = env.BASIC_AUTH_PASSWORD;
   // Fail closed: if the secrets are missing, serve nothing rather than everything
