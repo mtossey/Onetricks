@@ -9,7 +9,7 @@
 // The username and password are Cloudflare secrets (BASIC_AUTH_USER and
 // BASIC_AUTH_PASSWORD), set with "npx wrangler pages secret put", never in the repo.
 
-const REALM = "lolmains prototype";
+const REALM = "mainstats prototype";
 
 async function sha256(text) {
   return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));

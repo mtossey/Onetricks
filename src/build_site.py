@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # Gitignored, because the champion files contain Riot IDs
 WEB_DATA_DIR = ROOT / "web" / "public" / "data"
 
-SITE_NAME = "lolmains"
+SITE_NAME = "mainstats"
 
 # A win rate based on fewer games than this is shown as a dash
 MIN_GAMES_SHOWN = 30
